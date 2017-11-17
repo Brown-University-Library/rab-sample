@@ -1,5 +1,18 @@
 
-query_api =
+"""
+SELECT ?p (SAMPLE(?t) as ?type) (COUNT(?p) as ?c) (SAMPLE(?z) as ?samp) 
+WHERE {
+    <http://vivo.brown.edu/individual/org-brown-univ-dept3> ?p ?o .
+    OPTIONAL {?p a ?t .}
+    BIND(IF(isURI(?o), ?o, "") as ?z)
+}
+GROUP BY ?p
+ORDER BY ?type DESC(?c)
+"""
+
+import sys
+import requests
+import config.development as config
 
 faculty = [
     'http://vivo.brown.edu/individual/khansenm',
@@ -54,62 +67,78 @@ faculty = [
     'http://vivo.brown.edu/individual/nkouttab'
 ]
 
-orgs = [
-    'http://vivo.brown.edu/individual/org-brown-univ-dept70',
-    'http://vivo.brown.edu/individual/org-brown-univ-dept602',
-    'http://vivo.brown.edu/individual/org-brown-univ-dept604',
-    'http://vivo.brown.edu/individual/org-brown-univ-dept6',
-    'http://vivo.brown.edu/individual/org-brown-univ-dept29',
-    'http://vivo.brown.edu/individual/org-brown-univ-dept140',
-    'http://vivo.brown.edu/individual/org-brown-univ-dept254',
-    'http://vivo.brown.edu/individual/org-brown-univ-dept362',
-    'http://vivo.brown.edu/individual/org-brown-univ-dept13',
-    'http://vivo.brown.edu/individual/org-brown-univ-dept24',
-    'http://vivo.brown.edu/individual/org-brown-univ-dept221',
-    'http://vivo.brown.edu/individual/org-brown-univ-dept263',
-    'http://vivo.brown.edu/individual/org-brown-univ-dept20',
-    'http://vivo.brown.edu/individual/org-brown-univ-dept266',
-    'http://vivo.brown.edu/individual/org-brown-univ-dept231',
-    'http://vivo.brown.edu/individual/org-brown-univ-dept15',
-    'http://vivo.brown.edu/individual/org-brown-univ-dept42',
-    'http://vivo.brown.edu/individual/org-brown-univ-dept41',
-    'http://vivo.brown.edu/individual/org-brown-univ-dept31',
-    'http://vivo.brown.edu/individual/org-brown-univ-dept14'
-]
+# orgs = [
+#     'http://vivo.brown.edu/individual/org-brown-univ-dept70',
+#     'http://vivo.brown.edu/individual/org-brown-univ-dept602',
+#     'http://vivo.brown.edu/individual/org-brown-univ-dept604',
+#     'http://vivo.brown.edu/individual/org-brown-univ-dept6',
+#     'http://vivo.brown.edu/individual/org-brown-univ-dept29',
+#     'http://vivo.brown.edu/individual/org-brown-univ-dept140',
+#     'http://vivo.brown.edu/individual/org-brown-univ-dept254',
+#     'http://vivo.brown.edu/individual/org-brown-univ-dept362',
+#     'http://vivo.brown.edu/individual/org-brown-univ-dept13',
+#     'http://vivo.brown.edu/individual/org-brown-univ-dept24',
+#     'http://vivo.brown.edu/individual/org-brown-univ-dept221',
+#     'http://vivo.brown.edu/individual/org-brown-univ-dept263',
+#     'http://vivo.brown.edu/individual/org-brown-univ-dept20',
+#     'http://vivo.brown.edu/individual/org-brown-univ-dept266',
+#     'http://vivo.brown.edu/individual/org-brown-univ-dept231',
+#     'http://vivo.brown.edu/individual/org-brown-univ-dept15',
+#     'http://vivo.brown.edu/individual/org-brown-univ-dept42',
+#     'http://vivo.brown.edu/individual/org-brown-univ-dept41',
+#     'http://vivo.brown.edu/individual/org-brown-univ-dept31',
+#     'http://vivo.brown.edu/individual/org-brown-univ-dept14'
+# ]
 
-def branch(uri):
+def traverse(nodes):
+    data = query(nodes.pop())
+    filtered = filterData(data)
+    nbors = pathfinder(filtered)
+    nodes = nodesnbors
+    if not nodes:
+        return filtered
+    else:
+        return filtered + traverse(nodes)
+
+def parse_ntriple(row):
+    s = row[:row.index(' ')]
+    row = row[row.index(' ') + 1:]
+    p = row[:row.index(' ')]
+    row = row[row.index(' ') + 1:]
+    o = row[:row.rindex(" .")]
+    # o = row[:]
+    return (s,p,o)
+
+# def split_ntriples(nt):
+#     delim = ' .\n'
+#     line_end = nt.index(delim)
+#     idx = nt.index(delim)
+#     parsed = nt[:idx]
+#     if nt[idx + len(delim):] == '\n':
+#         return [ parsed ]
+#     else:
+#         return [parsed ] + split_ntriples(nt[idx + len(delim):])
+
+def query(uri):
     query = """
     CONSTRUCT {{ <{0}> ?p ?o. }}
     WHERE {{ <{0}> ?p ?o .}}
     """.format(uri)
-    headers = {'Accept': 'application/json', 'charset':'utf-8'} 
-    data = { 'email': email, 'password': passw, 'query': query }
-    resp = requests.post(query_url, data=data, headers=headers)
+    headers = {'Accept': 'text/plain', 'charset':'utf-8'} 
+    data = { 'email': config.email, 'password': config.passw, 'query': query }
+    resp = requests.post(config.query_url, data=data, headers=headers)
     if resp.status_code == 200:
-        return resp.json()
+        triples = resp.text.splitlines()
+        return [ parse_ntriple(t) for t in triples ]
     else:
-        logger.error('Bad response from Query API: {}'.format(resp.text))
         return []
 
-def leaf(uri):
-    query = """
-    CONSTRUCT {{ <{0}> ?p ?o. }}
-    WHERE {{
-        <{0}> ?p ?o .
-        ?p a owl:DatatypeProperty .
-    }}
-    """.format(uri)
-    headers = {'Accept': 'application/json', 'charset':'utf-8'} 
-    data = { 'email': email, 'password': passw, 'query': query }
-    resp = requests.post(query_url, data=data, headers=headers)
-    if resp.status_code == 200:
-        return resp.json()
-    else:
-        logger.error('Bad response from Query API: {}'.format(resp.text))
-        return []
-
-def object_query(uri, rawData):
-    line_pattern = re.compile(uri + )
-    obj_line = re.search()
-
-def main():
+if __name__ == '__main__':
+    shortid = sys.argv[1]
+    print query('http://vivo.brown.edu/individual/' + shortid)
+    # with open('data/genberg.nt','r') as f:
+    #     nt = f.read()
+    # for line in nt.splitlines():
+    #     if line == '\n':
+    #         break
+    #     print parse_ntriple(line)
