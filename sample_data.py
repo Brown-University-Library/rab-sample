@@ -14,6 +14,9 @@ import sys
 import requests
 import config.development as config
 
+import urllib3
+urllib3.disable_warnings()
+
 faculty = [
     # 'http://vivo.brown.edu/individual/khansenm',
     # 'http://vivo.brown.edu/individual/embrown',
@@ -62,23 +65,41 @@ faculty = [
     # 'http://vivo.brown.edu/individual/mfaganmd',
     # 'http://vivo.brown.edu/individual/nlawandy',
     # 'http://vivo.brown.edu/individual/dchronle',
-    # 'http://vivo.brown.edu/individual/rwestlak',
-    # 'http://vivo.brown.edu/individual/rpendse',
-    'http://vivo.brown.edu/individual/bgenberg'
+    '<http://vivo.brown.edu/individual/rwestlak>',
+    '<http://vivo.brown.edu/individual/rpendse>',
+    '<http://vivo.brown.edu/individual/bgenberg>'
 ]
 
 
-def traverse(nodes, visited=[]):
-    node = nodes.pop()
-    data = query(node)
-    parsed = parseResponse(data)
-    filtered = filterData(parsed)
-    nbors = pathFinder(filtered)
-    nodes = nodes + nbors
-    if not nodes:
-        return filtered
-    else:
-        return filtered + traverse(nodes)
+def traverse(nodes, outFile):
+    visited = set()
+    loop = 0
+    bad = [ 'http://vivo.brown.edu/individual/jalbinam',
+            'http://vivo.brown.edu/individual/imilleri',
+            'http://vivo.brown.edu/individual/elbloom',
+            'http://vivo.brown.edu/individual/ac171',
+            'http://vivo.brown.edu/individual/dchatter',
+            ]
+
+    with open(outFile, 'w') as f:
+        while len(nodes) > 0 and loop < 300:
+            node = nodes.pop()
+            visited.add(node)
+            data = query(node)
+            parsed = parseResponse(data)
+            filtered = filterData(parsed)
+            for line in filtered:
+                f.write( '{0} {1} {2} .\n'.format(*line) )
+            nbors = pathFinder(filtered)
+            # check = [ n for n in nbors if n in bad ]
+            # if len(check) > 0:
+            #     print node, check
+            nodes = nodes + nbors
+            nodes = [ n for n in nodes if n not in visited ]
+            loop += 1
+
+    print loop
+
 
 def filterData(data):
     strip_properties =  [
@@ -89,13 +110,15 @@ def filterData(data):
             '<http://vivoweb.org/ontology/core#researchAreaOf>',
             '<http://vivo.brown.edu/ontology/citation#hasContributor>',
             '<http://vivo.brown.edu/ontology/citation#venueFor>',
-            '<http://vivo.brown.edu/ontology/profile#trainingFor>',
-            '<http://vivo.brown.edu/ontology/vivo-brown/cvOf>',
-            '<http://vivoweb.org/ontology/core#webpageOf>',
-            '<http://vivoweb.org/ontology/core#educationalTrainingOf>',
-            '<http://vivoweb.org/ontology/core#positionForPerson>',
+            # '<http://vivo.brown.edu/ontology/profile#trainingFor>',
+            # '<http://vivo.brown.edu/ontology/vivo-brown/cvOf>',
+            # '<http://vivoweb.org/ontology/core#webpageOf>',
+            # '<http://vivoweb.org/ontology/core#educationalTrainingOf>',
+            # '<http://vivoweb.org/ontology/core#positionForPerson>',
             '<http://vivoweb.org/ontology/core#subOrganizationWithin>',
+            '<http://vivo.brown.edu/ontology/profile#organizationFor>',
             '<http://vivo.brown.edu/ontology/display#BrownOrg>'
+            
         ]
     # strip_properties = {
     #     '<http://xmlns.com/foaf/0.1/Organization>' : [
@@ -140,8 +163,9 @@ def filterData(data):
 def pathFinder(data):
     skip = [ '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>',
             '<http://vitro.mannlib.cornell.edu/ns/vitro/0.7#mostSpecificType>',
-            '<http://vitro.mannlib.cornell.edu/ns/vitro/public#mostSpecificType>' ]
-    return [ t[2][1:-1] for t in data if t[2].startswith('<') and
+            '<http://vitro.mannlib.cornell.edu/ns/vitro/public#mostSpecificType>',
+            '<http://vivoweb.org/ontology/core#dateTimePrecision>' ]
+    return [ t[2] for t in data if t[2].startswith('<') and
                 t[1] not in skip ]
 
 def parse_ntriple(row):
@@ -162,8 +186,8 @@ def parseResponse(resp):
 
 def query(uri):
     query = """
-    CONSTRUCT {{ <{0}> ?p ?o. }}
-    WHERE {{ <{0}> ?p ?o .}}
+    CONSTRUCT {{ {0} ?p ?o. }}
+    WHERE {{ {0} ?p ?o .}}
     """.format(uri)
     headers = {'Accept': 'text/plain', 'charset':'utf-8'} 
     data = { 'email': config.email, 'password': config.passw, 'query': query }
@@ -171,6 +195,7 @@ def query(uri):
     if resp.status_code == 200:
         return resp.text
     else:
+        print resp.text
         return ''
 
 if __name__ == '__main__':
@@ -179,7 +204,4 @@ if __name__ == '__main__':
     # parsed = parseResponse(nt)
     # filtered = filterData(parsed)
     # print pathFinder(filtered)
-    out = traverse(faculty)
-    subs = { o[0] for o in out }
-    for s in subs:
-        print s
+    traverse(faculty, 'data/sample.nt')
