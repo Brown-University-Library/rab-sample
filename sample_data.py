@@ -12,77 +12,71 @@ ORDER BY ?type DESC(?c)
 
 import sys
 import requests
+import time
 import config.development as config
 
 import urllib3
 urllib3.disable_warnings()
 
 faculty = [
-    # 'http://vivo.brown.edu/individual/khansenm',
-    # 'http://vivo.brown.edu/individual/embrown',
-    # 'http://vivo.brown.edu/individual/jpipher',
-    # 'http://vivo.brown.edu/individual/lbrownmd',
-    # 'http://vivo.brown.edu/individual/etollmd',
-    # 'http://vivo.brown.edu/individual/jvandenb',
-    # 'http://vivo.brown.edu/individual/bgenberg',
-    # 'http://vivo.brown.edu/individual/mhohenha',
-    # 'http://vivo.brown.edu/individual/eterrymo',
-    # 'http://vivo.brown.edu/individual/aplette',
-    # 'http://vivo.brown.edu/individual/rarenber',
-    # 'http://vivo.brown.edu/individual/cfaulkne',
-    # 'http://vivo.brown.edu/individual/mklitzke',
-    # 'http://vivo.brown.edu/individual/jdibened',
-    # 'http://vivo.brown.edu/individual/cvillarr',
-    # 'http://vivo.brown.edu/individual/scohenmd',
-    # 'http://vivo.brown.edu/individual/mhillstr',
-    # 'http://vivo.brown.edu/individual/mdasilva',
-    # 'http://vivo.brown.edu/individual/cjsammar',
-    # 'http://vivo.brown.edu/individual/lsnadymc',
-    # 'http://vivo.brown.edu/individual/pruberto',
-    # 'http://vivo.brown.edu/individual/jkuzner',
-    # 'http://vivo.brown.edu/individual/pharropm',
-    # 'http://vivo.brown.edu/individual/ss74',
-    # 'http://vivo.brown.edu/individual/cn8',
-    # 'http://vivo.brown.edu/individual/rbhatt',
-    # 'http://vivo.brown.edu/individual/dnickel',
-    # 'http://vivo.brown.edu/individual/awebb',
-    # 'http://vivo.brown.edu/individual/efwalsh',
-    # 'http://vivo.brown.edu/individual/ll7',
-    # 'http://vivo.brown.edu/individual/kmonchik',
-    # 'http://vivo.brown.edu/individual/ewittels',
-    # 'http://vivo.brown.edu/individual/egartman',
-    # 'http://vivo.brown.edu/individual/ljrubinm',
-    # 'http://vivo.brown.edu/individual/ffenghi',
-    # 'http://vivo.brown.edu/individual/rpadilla',
-    # 'http://vivo.brown.edu/individual/elaposat',
-    # 'http://vivo.brown.edu/individual/ccarpent',
-    # 'http://vivo.brown.edu/individual/rbungiro',
-    # 'http://vivo.brown.edu/individual/sschenna',
-    # 'http://vivo.brown.edu/individual/wc53',
-    # 'http://vivo.brown.edu/individual/ac184',
-    # 'http://vivo.brown.edu/individual/mapomera',
-    # 'http://vivo.brown.edu/individual/gdk',
-    # 'http://vivo.brown.edu/individual/mfaganmd',
-    # 'http://vivo.brown.edu/individual/nlawandy',
-    # 'http://vivo.brown.edu/individual/dchronle',
+    '<http://vivo.brown.edu/individual/khansenm>',
+    '<http://vivo.brown.edu/individual/embrown>',
+    '<http://vivo.brown.edu/individual/jpipher>',
+    '<http://vivo.brown.edu/individual/lbrownmd>',
+    '<http://vivo.brown.edu/individual/etollmd>',
+    '<http://vivo.brown.edu/individual/jvandenb>',
+    '<http://vivo.brown.edu/individual/bgenberg>',
+    '<http://vivo.brown.edu/individual/mhohenha>',
+    '<http://vivo.brown.edu/individual/eterrymo>',
+    '<http://vivo.brown.edu/individual/aplette>',
+    '<http://vivo.brown.edu/individual/rarenber>',
+    '<http://vivo.brown.edu/individual/cfaulkne>',
+    '<http://vivo.brown.edu/individual/mklitzke>',
+    '<http://vivo.brown.edu/individual/jdibened>',
+    '<http://vivo.brown.edu/individual/cvillarr>',
+    '<http://vivo.brown.edu/individual/scohenmd>',
+    '<http://vivo.brown.edu/individual/mhillstr>',
+    '<http://vivo.brown.edu/individual/mdasilva>',
+    '<http://vivo.brown.edu/individual/cjsammar>',
+    '<http://vivo.brown.edu/individual/lsnadymc>',
+    '<http://vivo.brown.edu/individual/pruberto>',
+    '<http://vivo.brown.edu/individual/jkuzner>',
+    '<http://vivo.brown.edu/individual/pharropm>',
+    '<http://vivo.brown.edu/individual/ss74>',
+    '<http://vivo.brown.edu/individual/cn8>',
+    '<http://vivo.brown.edu/individual/rbhatt>',
+    '<http://vivo.brown.edu/individual/dnickel>',
+    '<http://vivo.brown.edu/individual/awebb>',
+    '<http://vivo.brown.edu/individual/efwalsh>',
+    '<http://vivo.brown.edu/individual/ll7>',
+    '<http://vivo.brown.edu/individual/kmonchik>',
+    '<http://vivo.brown.edu/individual/ewittels>',
+    '<http://vivo.brown.edu/individual/egartman>',
+    '<http://vivo.brown.edu/individual/ljrubinm>',
+    '<http://vivo.brown.edu/individual/ffenghi>',
+    '<http://vivo.brown.edu/individual/rpadilla>',
+    '<http://vivo.brown.edu/individual/elaposat>',
+    '<http://vivo.brown.edu/individual/ccarpent>',
+    '<http://vivo.brown.edu/individual/rbungiro>',
+    '<http://vivo.brown.edu/individual/sschenna>',
+    '<http://vivo.brown.edu/individual/wc53>',
+    '<http://vivo.brown.edu/individual/ac184>',
+    '<http://vivo.brown.edu/individual/mapomera>',
+    '<http://vivo.brown.edu/individual/gdk>',
+    '<http://vivo.brown.edu/individual/mfaganmd>',
+    '<http://vivo.brown.edu/individual/nlawandy>',
+    '<http://vivo.brown.edu/individual/dchronle>',
     '<http://vivo.brown.edu/individual/rwestlak>',
-    '<http://vivo.brown.edu/individual/rpendse>',
-    '<http://vivo.brown.edu/individual/bgenberg>'
+    '<http://vivo.brown.edu/individual/rpendse>'
 ]
 
 
 def traverse(nodes, outFile):
     visited = set()
     loop = 0
-    bad = [ 'http://vivo.brown.edu/individual/jalbinam',
-            'http://vivo.brown.edu/individual/imilleri',
-            'http://vivo.brown.edu/individual/elbloom',
-            'http://vivo.brown.edu/individual/ac171',
-            'http://vivo.brown.edu/individual/dchatter',
-            ]
 
     with open(outFile, 'w') as f:
-        while len(nodes) > 0 and loop < 300:
+        while len(nodes) > 0 and loop < 5000:
             node = nodes.pop()
             visited.add(node)
             data = query(node)
@@ -91,14 +85,10 @@ def traverse(nodes, outFile):
             for line in filtered:
                 f.write( '{0} {1} {2} .\n'.format(*line) )
             nbors = pathFinder(filtered)
-            # check = [ n for n in nbors if n in bad ]
-            # if len(check) > 0:
-            #     print node, check
             nodes = nodes + nbors
             nodes = [ n for n in nodes if n not in visited ]
+            # time.sleep(.1)
             loop += 1
-
-    print loop
 
 
 def filterData(data):
@@ -110,54 +100,14 @@ def filterData(data):
             '<http://vivoweb.org/ontology/core#researchAreaOf>',
             '<http://vivo.brown.edu/ontology/citation#hasContributor>',
             '<http://vivo.brown.edu/ontology/citation#venueFor>',
-            # '<http://vivo.brown.edu/ontology/profile#trainingFor>',
-            # '<http://vivo.brown.edu/ontology/vivo-brown/cvOf>',
-            # '<http://vivoweb.org/ontology/core#webpageOf>',
-            # '<http://vivoweb.org/ontology/core#educationalTrainingOf>',
-            # '<http://vivoweb.org/ontology/core#positionForPerson>',
-            '<http://vivoweb.org/ontology/core#subOrganizationWithin>',
+            '<http://vivoweb.org/ontology/core#hasSubOrganization>',
             '<http://vivo.brown.edu/ontology/profile#organizationFor>',
-            '<http://vivo.brown.edu/ontology/display#BrownOrg>'
-            
+            '<http://vivo.brown.edu/ontology/display#BrownOrg>',
+            '<http://vivo.brown.edu/ontology/profile#specialtyFor>',
+            '<http://vivo.brown.edu/ontology/profile#grantsCredential>',
+            '<http://vivo.brown.edu/ontology/profile#hospitalFor>',
+            '<http://vivo.brown.edu/ontology/citation#publisherFor>'          
         ]
-    # strip_properties = {
-    #     '<http://xmlns.com/foaf/0.1/Organization>' : [
-    #         '<http://vivoweb.org/ontology/core#organizationForPosition>',
-    #         '<http://vivoweb.org/ontology/core#organizationForTraining>'
-    #     ],
-    #     '<http://vivoweb.org/ontology/core#FacultyMember>' : [
-    #         '<http://vivoweb.org/ontology/core#hasCollaborator>',
-    #         '<http://vivo.brown.edu/ontology/vivo-brown/hasAffiliation>'
-    #     ],
-    #     '<http://www.w3.org/2004/02/skos/core#Concept>' : [
-    #         '<http://vivoweb.org/ontology/core#researchAreaOf>'
-    #     ],
-    #     '<http://vivo.brown.edu/ontology/citation#Citation>' : [
-    #         '<http://vivo.brown.edu/ontology/citation#hasContributor>'
-    #     ],
-    #     '<http://vivo.brown.edu/ontology/citation#Venue>' : [
-    #         '<http://vivo.brown.edu/ontology/citation#venueFor>'
-    #     ],
-    #     '<http://vivo.brown.edu/ontology/profile#PostdocAppointment>' : [
-    #         '<http://vivo.brown.edu/ontology/profile#trainingFor>'
-    #     ],
-    #     '<http://vivoweb.org/ontology/core#URLLink>' : [
-    #         '<http://vivo.brown.edu/ontology/vivo-brown/cvOf>',
-    #         '<http://vivoweb.org/ontology/core#webpageOf>'
-    #     ],
-    #     '<http://vivoweb.org/ontology/core#EducationalTraining>': [
-    #         '<http://vivoweb.org/ontology/core#educationalTrainingOf>'
-    #     ],
-    #     '<http://vivoweb.org/ontology/core#FacultyPosition>' : [
-    #         '<http://vivoweb.org/ontology/core#positionForPerson>'
-    #     ]
-    # }
-    # type_data = [ t for t in data 
-    #                 if t[1] == '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>' and
-    #                     t[2] in strip_properties.keys() ]
-    # if len(type_data) == 0:
-    #     return data
-    # rmv = strip_properties[type_data[0][2]]
     return [ t for t in data if t[1] not in strip_properties ]
 
 def pathFinder(data):
@@ -199,9 +149,4 @@ def query(uri):
         return ''
 
 if __name__ == '__main__':
-    # with open('data/genberg.nt', 'r') as f:
-    #     nt = f.read()
-    # parsed = parseResponse(nt)
-    # filtered = filterData(parsed)
-    # print pathFinder(filtered)
     traverse(faculty, 'data/sample.nt')
