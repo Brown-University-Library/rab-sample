@@ -98,6 +98,7 @@ def filterData(data):
             '<http://vivoweb.org/ontology/core#hasCollaborator>',
             '<http://vivo.brown.edu/ontology/vivo-brown/hasAffiliation>',
             '<http://vivoweb.org/ontology/core#researchAreaOf>',
+            '<http://vivo.brown.edu/ontology/vivo-brown/geographicResearchAreaOf>',
             '<http://vivo.brown.edu/ontology/citation#hasContributor>',
             '<http://vivo.brown.edu/ontology/citation#venueFor>',
             '<http://vivoweb.org/ontology/core#hasSubOrganization>',
